@@ -2,6 +2,7 @@ package com.ratz.libraryapi.resource;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ratz.libraryapi.DTO.BookDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +34,9 @@ public class BookControlTest {
   @DisplayName("Should create one book with success")
   public void createBookTest() throws Exception {
 
-    String json = new ObjectMapper().writeValueAsString(null);
+    BookDTO book = BookDTO.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
+
+    String json = new ObjectMapper().writeValueAsString(book);
 
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(BOOK_API)
         .contentType(MediaType.APPLICATION_JSON)
@@ -42,9 +45,9 @@ public class BookControlTest {
 
     mockMvc.perform(request)
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("id").isNotEmpty())
-        .andExpect(jsonPath("title").isNotEmpty())
-        .andExpect(jsonPath("author").isNotEmpty());
+        .andExpect(jsonPath("id").value(book.getId()))
+        .andExpect(jsonPath("title").value(book.getTitle()))
+        .andExpect(jsonPath("author").value(book.getAuthor()));
   }
 
   @Test
