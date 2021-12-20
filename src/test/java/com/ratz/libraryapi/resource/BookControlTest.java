@@ -3,12 +3,17 @@ package com.ratz.libraryapi.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ratz.libraryapi.DTO.BookDTO;
+import com.ratz.libraryapi.entity.Book;
+import com.ratz.libraryapi.service.BookService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -30,11 +35,18 @@ public class BookControlTest {
   @Autowired
   MockMvc mockMvc;
 
+  @MockBean
+  BookService bookService;
+
   @Test
   @DisplayName("Should create one book with success")
   public void createBookTest() throws Exception {
 
     BookDTO book = BookDTO.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
+
+    Book savedBook = Book.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
+
+    BDDMockito.given(bookService.save(Mockito.any(Book.class))).willReturn(savedBook);
 
     String json = new ObjectMapper().writeValueAsString(book);
 
