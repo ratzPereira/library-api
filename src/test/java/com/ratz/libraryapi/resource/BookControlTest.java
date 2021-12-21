@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ratz.libraryapi.DTO.BookDTO;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.service.BookService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.regex.Matcher;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -64,7 +67,17 @@ public class BookControlTest {
 
   @Test
   @DisplayName("Should give an error when we dont have all data to create one book")
-  public void createInvalidBookTest() {
+  public void createInvalidBookTest() throws Exception {
 
+    String json = new ObjectMapper().writeValueAsString(new BookDTO());
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(BOOK_API)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(json);
+
+    mockMvc.perform(request)
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("errors", Matchers.hasSize(3)));
   }
 }
