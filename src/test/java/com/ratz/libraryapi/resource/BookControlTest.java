@@ -129,6 +129,18 @@ public class BookControlTest {
 
   }
 
+  @Test
+  @DisplayName("Should return resource not found if no book found")
+  public void getBookNotFoundTest() throws Exception {
+
+    BDDMockito.given(bookService.getById(Mockito.anyLong())).willReturn(Optional.empty());
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(BOOK_API.concat("/" + 1)).accept(MediaType.APPLICATION_JSON);
+
+    mockMvc.perform(request)
+        .andExpect(status().isNotFound());
+  }
+
 
   private BookDTO createBook() {
     return BookDTO.builder().author("Me").id(1L).isbn("123").title("Book Test").build();

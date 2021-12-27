@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.modelmapper.ModelMapper;
 import io.swagger.annotations.Api;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 
@@ -57,9 +58,7 @@ public class BookController {
   @GetMapping("/{id}")
   public BookDTO getBookById(@PathVariable Long id){
 
-    Book book = bookService.getById(id).get();
-    return modelMapper.map(book,BookDTO.class);
+    return bookService.getById(id).map(book -> modelMapper.map(book,BookDTO.class))
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
-
-
 }
