@@ -4,6 +4,7 @@ package com.ratz.libraryapi.resource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ratz.libraryapi.DTO.BookDTO;
 import com.ratz.libraryapi.entity.Book;
+import com.ratz.libraryapi.exception.BusinessException;
 import com.ratz.libraryapi.service.BookService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Optional;
+
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,7 +46,7 @@ public class BookControlTest {
   @DisplayName("Should create one book with success")
   public void createBookTest() throws Exception {
 
-    BookDTO book = BookDTO.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
+    BookDTO book = createBook();
 
     Book savedBook = Book.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
 
@@ -64,7 +68,70 @@ public class BookControlTest {
 
   @Test
   @DisplayName("Should give an error when we dont have all data to create one book")
-  public void createInvalidBookTest() {
+  public void createInvalidBookTest() throws Exception {
+
+    String json = new ObjectMapper().writeValueAsString(new BookDTO());
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(BOOK_API)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(json);
+
+    mockMvc.perform(request)
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("errors", hasSize(3)));
+  }
+
+  @Test
+  @DisplayName("Should give an error if we try to save one book with not unique Isbn")
+  public void createBookWithDuplicateIsbn() throws Exception {
+
+    BookDTO book = createBook();
+    String json = new ObjectMapper().writeValueAsString(book);
+    String errorMessage = "One book with this Isbn already exist";
+
+    BDDMockito.given(bookService.save(Mockito.any(Book.class)))
+        .willThrow(new BusinessException(errorMessage));
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(BOOK_API)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(json);
+
+    mockMvc.perform(request).andExpect(status().isBadRequest())
+        .andExpect(jsonPath("errors", hasSize(1)))
+        .andExpect(jsonPath("errors[0]").value(errorMessage));
 
   }
+
+
+  @Test
+  @DisplayName("Should give book details")
+  public void getBookDetailsTest() throws Exception {
+
+    Long id = 1L;
+
+    Book book = Book.builder().id(id)
+        .title(createBook().getTitle())
+        .author(createBook().getAuthor())
+        .isbn(createBook().getIsbn()).build();
+
+    BDDMockito.given(bookService.getById(id)).willReturn(Optional.of(book));
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(BOOK_API.concat("/" + id)).accept(MediaType.APPLICATION_JSON);
+
+    mockMvc.perform(request)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("id").value(id))
+        .andExpect(jsonPath("title").value(createBook().getTitle()))
+        .andExpect(jsonPath("author").value(createBook().getAuthor()))
+        .andExpect(jsonPath("isbn").value(createBook().getIsbn()));
+
+  }
+
+
+  private BookDTO createBook() {
+    return BookDTO.builder().author("Me").id(1L).isbn("123").title("Book Test").build();
+  }
+
 }
