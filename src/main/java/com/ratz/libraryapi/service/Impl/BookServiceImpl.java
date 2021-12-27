@@ -38,4 +38,10 @@ public class BookServiceImpl implements BookService {
     repository.delete(book);
   }
 
+  @Override
+  public Book update(Book book) {
+
+    return null;
+  }
+
 }
