@@ -7,11 +7,16 @@ import java.util.List;
 
 public class ApiErrors{
 
-  private final List<String> errors;
+  private List<String> errors;
 
   public ApiErrors(BindingResult result) {
     this.errors = new ArrayList<>();
     result.getAllErrors().forEach( error -> this.errors.add(error.getDefaultMessage()));
+  }
+
+
+  public ApiErrors(BusinessException ex) {
+    this.errors = List.of(ex.getMessage());
   }
 
   public List<String> getErrors() {
