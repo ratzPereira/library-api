@@ -12,36 +12,45 @@ import java.util.Optional;
 public class BookServiceImpl implements BookService {
 
 
-  private final BookRepository repository;
+    private final BookRepository repository;
 
-  public BookServiceImpl(BookRepository repository) {
-    this.repository = repository;
-  }
-
-  @Override
-  public Book save(Book book){
-
-    if(repository.existsByIsbn(book.getIsbn())) {
-      throw new BusinessException("One book with this Isbn already exist");
+    public BookServiceImpl(BookRepository repository) {
+        this.repository = repository;
     }
-    return repository.save(book);
-  }
 
-  @Override
-  public Optional<Book> getById(Long id) {
-    return repository.findById(id);
-  }
+    @Override
+    public Book save(Book book) {
+
+        if (repository.existsByIsbn(book.getIsbn())) {
+            throw new BusinessException("One book with this Isbn already exist");
+        }
+        return repository.save(book);
+    }
+
+    @Override
+    public Optional<Book> getById(Long id) {
+        return repository.findById(id);
+    }
 
 
-  @Override
-  public void deleteBook(Book book) {
-    repository.delete(book);
-  }
+    @Override
+    public void deleteBook(Book book) {
 
-  @Override
-  public Book update(Book book) {
+        if (book == null || book.getId() == null) {
+            throw new IllegalArgumentException("book id can not be null");
+        }
 
-    return null;
-  }
+        repository.delete(book);
+    }
+
+    @Override
+    public Book update(Book book) {
+
+        if (book == null || book.getId() == null) {
+            throw new IllegalArgumentException("book id can not be null");
+        }
+
+        return repository.save(book);
+    }
 
 }
