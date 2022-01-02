@@ -3,6 +3,7 @@ package com.ratz.libraryapi.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ratz.libraryapi.DTO.BookDTO;
+import com.ratz.libraryapi.contoller.BookController;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.exception.BusinessException;
 import com.ratz.libraryapi.service.BookService;
@@ -36,9 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
-@WebMvcTest
+@WebMvcTest(controllers = BookController.class)
 @AutoConfigureMockMvc
-public class BookControlTest {
+public class BookControllerTest {
 
   static String BOOK_API = "/api/books";
 
