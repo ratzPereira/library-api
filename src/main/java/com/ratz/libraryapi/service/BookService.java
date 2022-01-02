@@ -14,4 +14,5 @@ public interface BookService {
   void deleteBook(Book book);
   Book update(Book book);
   Page<Book> find(Book filter, Pageable pageRequest);
+  Optional<Book> getByIsbn(String isbn);
 }
