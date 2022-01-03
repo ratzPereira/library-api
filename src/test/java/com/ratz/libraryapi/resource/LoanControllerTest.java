@@ -9,6 +9,7 @@ import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
 import com.ratz.libraryapi.service.BookService;
 import com.ratz.libraryapi.service.LoanService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,15 +23,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @ActiveProfiles("test")
@@ -75,8 +74,28 @@ public class LoanControllerTest {
 
     mockMvc.perform(requestBuilder)
         .andExpect(status().isCreated())
-        .andExpect((ResultMatcher) jsonPath("id").value(1L));
+        .andExpect(content().string("1"));
 
+  }
+
+  @Test
+  @DisplayName("Should give error when trying to create one loan with invalid Isbn")
+  public void invalidIsbnWhenCreatingLoanTest() throws Exception {
+
+    LoanDTO dto = LoanDTO.builder().isbn("123").clientName("Me").build();
+    String json = new ObjectMapper().writeValueAsString(dto);
+
+    BDDMockito.given(bookService.getByIsbn("123")).willReturn(Optional.empty());
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(LOAN_API)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json);
+
+    mockMvc.perform(request)
+        .andExpect(status().isBadRequest())
+        .andExpect( jsonPath("errors", Matchers.hasSize(1)))
+        .andExpect( jsonPath("errors[0]").value("Book not found"));
   }
 
 
