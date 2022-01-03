@@ -7,6 +7,7 @@ import com.ratz.libraryapi.DTO.LoanDTO;
 import com.ratz.libraryapi.contoller.LoanController;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
+import com.ratz.libraryapi.exception.BusinessException;
 import com.ratz.libraryapi.service.BookService;
 import com.ratz.libraryapi.service.LoanService;
 import org.hamcrest.Matchers;
@@ -96,6 +97,30 @@ public class LoanControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect( jsonPath("errors", Matchers.hasSize(1)))
         .andExpect( jsonPath("errors[0]").value("Book not found"));
+  }
+
+  @Test
+  @DisplayName("Should give error when trying to create one loan with one book already loaned")
+  public void bookIsLoanedOnCreateLoanTest() throws Exception {
+
+    LoanDTO dto = LoanDTO.builder().isbn("123").clientName("Me").build();
+    String json = new ObjectMapper().writeValueAsString(dto);
+
+    Book book = Book.builder().id(1L).isbn("123").build();
+    BDDMockito.given(bookService.getByIsbn("123")).willReturn(Optional.of(book));
+
+    BDDMockito.given(loanService.save(Mockito.any(Loan.class))).willThrow(new BusinessException("Book already loaned"));
+
+
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(LOAN_API)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json);
+
+    mockMvc.perform(request)
+        .andExpect(status().isBadRequest())
+        .andExpect( jsonPath("errors", Matchers.hasSize(1)))
+        .andExpect( jsonPath("errors[0]").value("Book already loaned"));
   }
 
 
