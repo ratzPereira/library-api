@@ -23,16 +23,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @ActiveProfiles("test")
@@ -97,8 +94,8 @@ public class LoanControllerTest {
 
     mockMvc.perform(request)
         .andExpect(status().isBadRequest())
-        .andExpect((ResultMatcher) jsonPath("errors", Matchers.hasSize(1)))
-        .andExpect((ResultMatcher) jsonPath("errors[0]").value("Book not found"));
+        .andExpect( jsonPath("errors", Matchers.hasSize(1)))
+        .andExpect( jsonPath("errors[0]").value("Book not found"));
   }
 
 
