@@ -10,11 +10,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -62,10 +64,7 @@ public class LoanServiceTest {
   @DisplayName("Should give an error when trying to save one loan with the book already loaned")
   public void saveLoanWithBookAlreadyLoaned(){
 
-    String customer = "Me";
-
     Loan loan = makeLoan();
-    loan.setClientName(customer);
 
     when(repository.existsByBookAndNotReturned(loan.getBook())).thenReturn(true);
 
@@ -77,9 +76,48 @@ public class LoanServiceTest {
   }
 
 
+  @Test
+  @DisplayName("Should get info about loan by id")
+  public void getLoanDetailsTest(){
+
+    Long id = 1L;
+
+    Loan loan = makeLoan();
+    loan.setId(id);
+
+    Mockito.when(loanService.getById(id)).thenReturn(Optional.of(loan));
+
+    Optional<Loan> loanFound = loanService.getById(id);
+
+    assertThat(loanFound.isPresent()).isTrue();
+    assertThat(loanFound.get().getId()).isEqualTo(id);
+    assertThat(loanFound.get().getClientName()).isEqualTo(loan.getClientName());
+    assertThat(loanFound.get().getBook()).isEqualTo(loan.getBook());
+    assertThat(loanFound.get().getReturned()).isEqualTo(loan.getReturned());
+
+    verify(repository).findById(id);
+
+  }
 
 
+  @Test
+  @DisplayName("Should update the info about loan by id")
+  public void updateLoanDetailsTest(){
 
+    Long id = 1L;
+
+    Loan loan = makeLoan();
+    loan.setId(id);
+    loan.setReturned(true);
+
+    when(repository.save(loan)).thenReturn(loan);
+
+    Loan update = loanService.update(loan);
+
+    assertThat(update.getReturned()).isTrue();
+    verify(repository).save(loan);
+
+  }
 
   private Loan makeLoan(){
     return Loan.builder().book(makeBook()).loanDate(LocalDate.now()).clientName("Me").id(1L).build();
