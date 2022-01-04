@@ -2,6 +2,7 @@ package com.ratz.libraryapi.contoller;
 
 
 import com.ratz.libraryapi.DTO.LoanDTO;
+import com.ratz.libraryapi.DTO.ReturnedLoanDTO;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
 import com.ratz.libraryapi.service.BookService;
@@ -31,7 +32,9 @@ public class LoanController {
   @ResponseStatus(HttpStatus.CREATED)
   public Long createLoan(@RequestBody LoanDTO loanDTO) {
 
-    Book book = bookService.getByIsbn(loanDTO.getIsbn()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book not found"));
+    Book book = bookService.getByIsbn(loanDTO.getIsbn()).orElseThrow(() ->
+        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book not found"));
+
     Loan loan = Loan.builder()
         .book(book)
         .loanDate(LocalDate.now())
@@ -41,5 +44,14 @@ public class LoanController {
     loan = loanService.save(loan);
 
     return loan.getId();
+  }
+
+  @PatchMapping("/{id}")
+  public void returnBook(@PathVariable Long id, @RequestBody ReturnedLoanDTO dto){
+
+    Loan loan = loanService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    loan.setReturned(dto.isReturned());
+    loanService.update(loan);
+
   }
 }

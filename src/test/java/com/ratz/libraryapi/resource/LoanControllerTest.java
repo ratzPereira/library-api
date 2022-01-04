@@ -4,6 +4,7 @@ package com.ratz.libraryapi.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ratz.libraryapi.DTO.LoanDTO;
+import com.ratz.libraryapi.DTO.ReturnedLoanDTO;
 import com.ratz.libraryapi.contoller.LoanController;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
@@ -30,6 +31,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -121,6 +123,48 @@ public class LoanControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect( jsonPath("errors", Matchers.hasSize(1)))
         .andExpect( jsonPath("errors[0]").value("Book already loaned"));
+  }
+
+  @Test
+  @DisplayName("Should return one book")
+  public void returnBookTest() throws Exception {
+
+    ReturnedLoanDTO dto = ReturnedLoanDTO.builder().returned(true).build();
+    Loan loan = Loan.builder().id(1L).build();
+
+    BDDMockito.given(loanService.getById(Mockito.anyLong()))
+        .willReturn(Optional.of(loan));
+
+    String json = new ObjectMapper().writeValueAsString(dto);
+
+    mockMvc.perform(patch(LOAN_API.concat("/1"))
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+        .andExpect(status().isOk());
+
+    Mockito.verify(loanService, Mockito.times(1)).update(loan);
+
+  }
+
+  @Test
+  @DisplayName("Should return error(404) if we try to return one non existent book")
+  public void returnNonexistentBookTest() throws Exception {
+
+    ReturnedLoanDTO dto = ReturnedLoanDTO.builder().returned(true).build();
+
+    BDDMockito.given(loanService.getById(Mockito.anyLong()))
+        .willReturn(Optional.empty());
+
+    String json = new ObjectMapper().writeValueAsString(dto);
+
+    mockMvc.perform(patch(LOAN_API.concat("/1"))
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+        .andExpect(status().isNotFound());
+
+
   }
 
 
