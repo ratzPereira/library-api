@@ -3,6 +3,7 @@ package com.ratz.libraryapi.service;
 
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
+import com.ratz.libraryapi.exception.BusinessException;
 import com.ratz.libraryapi.repository.LoanRepository;
 import com.ratz.libraryapi.service.Impl.LoanServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +17,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
@@ -45,6 +47,7 @@ public class LoanServiceTest {
     Loan loanSaved = makeLoan();
     loanSaved.setClientName(customer);
 
+    when(repository.existsByBookAndNotReturned(loan.getBook())).thenReturn(false);
     when(repository.save(loan)).thenReturn(loanSaved);
 
     Loan loan1 = loanService.save(loan);
@@ -53,6 +56,24 @@ public class LoanServiceTest {
     assertThat(loan1.getBook()).isEqualTo(loanSaved.getBook());
     assertThat(loan1.getLoanDate()).isEqualTo(loanSaved.getLoanDate());
     assertThat(loan1.getClientName()).isEqualTo(loanSaved.getClientName());
+  }
+
+  @Test
+  @DisplayName("Should give an error when trying to save one loan with the book already loaned")
+  public void saveLoanWithBookAlreadyLoaned(){
+
+    String customer = "Me";
+
+    Loan loan = makeLoan();
+    loan.setClientName(customer);
+
+    when(repository.existsByBookAndNotReturned(loan.getBook())).thenReturn(true);
+
+    Throwable exception = catchThrowable(()-> loanService.save(loan));
+
+    assertThat(exception).isInstanceOf(BusinessException.class).hasMessage("Book already loaned");
+
+    verify(repository, never()).save(loan);
   }
 
 
