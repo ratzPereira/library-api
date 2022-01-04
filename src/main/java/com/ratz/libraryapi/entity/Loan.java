@@ -21,11 +21,16 @@ public class Loan {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column
   private String clientName;
 
-  private boolean returned;
+  @Column
+  private Boolean returned;
 
+  @Column
   private LocalDate loanDate;
 
+  @JoinColumn(name = "id_book")
+  @ManyToOne(cascade=CascadeType.PERSIST)
   private Book book;
 }
