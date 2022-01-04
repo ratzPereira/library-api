@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
@@ -42,9 +43,9 @@ public class BookServiceTest {
   @DisplayName("Should save the book")
   public void saveBookTest() {
     Book book = createValidBook();
-    Mockito.when(repository.existsByIsbn(Mockito.anyString())).thenReturn(false);
+    when(repository.existsByIsbn(Mockito.anyString())).thenReturn(false);
 
-    Mockito.when(repository.save(book)).thenReturn(createValidBook());
+    when(repository.save(book)).thenReturn(createValidBook());
     Book savedBook = service.save(book);
 
     assertThat(savedBook.getId()).isNotNull();
@@ -58,14 +59,14 @@ public class BookServiceTest {
   public void shouldThrowErrorIfIsbnNotUnique() {
 
     Book book = createValidBook();
-    Mockito.when(repository.existsByIsbn(Mockito.anyString())).thenReturn(true);
+    when(repository.existsByIsbn(Mockito.anyString())).thenReturn(true);
 
     Throwable exception = Assertions.catchThrowable(() -> service.save(book));
 
     assertThat(exception).isInstanceOf(BusinessException.class)
         .hasMessage("One book with this Isbn already exist");
 
-    Mockito.verify(repository, Mockito.never()).save(book);
+    verify(repository, Mockito.never()).save(book);
 
   }
 
@@ -82,7 +83,7 @@ public class BookServiceTest {
     Book book = createValidBook();
     book.setId(id);
 
-    Mockito.when(repository.findById(id)).thenReturn(Optional.of(book));
+    when(repository.findById(id)).thenReturn(Optional.of(book));
 
     Optional<Book> foundBook = service.getById(id);
 
@@ -101,7 +102,7 @@ public class BookServiceTest {
 
     Long id = 1L;
 
-    Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
+    when(repository.findById(id)).thenReturn(Optional.empty());
 
     Optional<Book> foundBook = service.getById(id);
 
@@ -116,7 +117,7 @@ public class BookServiceTest {
 
     org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> service.deleteBook(book));
 
-    Mockito.verify(repository, Mockito.times(1)).delete(book);
+    verify(repository, times(1)).delete(book);
   }
 
   @Test
@@ -127,7 +128,7 @@ public class BookServiceTest {
 
     org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> service.deleteBook(book));
 
-    Mockito.verify(repository, Mockito.times(0)).delete(book);
+    verify(repository, times(0)).delete(book);
   }
 
   @Test
@@ -139,7 +140,7 @@ public class BookServiceTest {
     Book updatingBook = createValidBook();
     updatingBook.setAuthor("Not me");
 
-    Mockito.when(repository.save(book)).thenReturn(updatingBook);
+    when(repository.save(book)).thenReturn(updatingBook);
 
     Book book1 = service.update(book);
 
@@ -158,7 +159,7 @@ public class BookServiceTest {
 
     org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> service.update(book));
 
-    Mockito.verify(repository, Mockito.times(0)).save(book);
+    verify(repository, times(0)).save(book);
   }
 
 
@@ -172,7 +173,7 @@ public class BookServiceTest {
     List<Book> list = Arrays.asList(book);
 
     Page<Book> page = new PageImpl<Book>(Arrays.asList(book), pageRequest, 1);
-    Mockito.when(repository.findAll(Mockito.any(Example.class), Mockito.any(PageRequest.class))).thenReturn(page);
+    when(repository.findAll(Mockito.any(Example.class), Mockito.any(PageRequest.class))).thenReturn(page);
 
     Page<Book> books = service.find(book, pageRequest);
 
@@ -183,5 +184,20 @@ public class BookServiceTest {
 
   }
 
+  @Test
+  @DisplayName("Should get one book by isbn")
+  public void findBookByIsbnTest() {
+
+    String isbn = "123";
+    when(repository.findBookByIsbn(isbn)).thenReturn(Optional.of(createValidBook()));
+
+    Optional<Book> book = service.getByIsbn(isbn);
+
+    assertThat(book.isPresent()).isTrue();
+    assertThat(book.get().getId()).isEqualTo(1L);
+    assertThat(book.get().getIsbn()).isEqualTo(isbn);
+
+    verify(repository, times(1)).findBookByIsbn(isbn);
+  }
 
 }

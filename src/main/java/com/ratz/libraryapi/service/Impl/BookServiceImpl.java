@@ -70,7 +70,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Optional<Book> getByIsbn(String isbn) {
-        return repository.getBookByIsbn(isbn);
+        return repository.findBookByIsbn(isbn);
     }
 
 }
