@@ -1,6 +1,8 @@
 package com.ratz.libraryapi.service;
 
 
+import com.ratz.libraryapi.DTO.LoanDTO;
+import com.ratz.libraryapi.DTO.LoanFilterDTO;
 import com.ratz.libraryapi.entity.Book;
 import com.ratz.libraryapi.entity.Loan;
 import com.ratz.libraryapi.exception.BusinessException;
@@ -12,10 +14,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,6 +126,34 @@ public class LoanServiceTest {
     verify(repository).save(loan);
 
   }
+
+  @Test
+  @DisplayName("Should filter loans by the given properties")
+  public void findLoansTest() {
+
+    LoanFilterDTO loanDTO = LoanFilterDTO.builder().isbn("123").clientName("Me").build();
+
+    Loan loan = makeLoan();
+    PageRequest pageRequest = PageRequest.of(0, 10);
+
+    List<Loan> list = Arrays.asList(loan);
+
+    Page<Loan> page = new PageImpl<Loan>(Arrays.asList(loan), pageRequest, 1);
+    when(repository.findByBookIsbnOrClientName(Mockito.anyString(),Mockito.anyString(), Mockito.any(PageRequest.class))).thenReturn(page);
+
+    Page<Loan> loans = loanService.find(loanDTO, pageRequest);
+
+    assertThat(loans.getTotalElements()).isEqualTo(1);
+    assertThat(loans.getContent()).isEqualTo(list);
+    assertThat(loans.getPageable().getPageNumber()).isEqualTo(0);
+    assertThat(loans.getPageable().getPageSize()).isEqualTo(10);
+
+  }
+
+
+
+
+
 
   public static Loan makeLoan(){
     return Loan.builder().book(makeBook()).loanDate(LocalDate.now()).clientName("Me").id(1L).build();
