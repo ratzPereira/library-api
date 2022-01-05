@@ -119,11 +119,11 @@ public class LoanServiceTest {
 
   }
 
-  private Loan makeLoan(){
+  public static Loan makeLoan(){
     return Loan.builder().book(makeBook()).loanDate(LocalDate.now()).clientName("Me").id(1L).build();
   }
 
-  private Book makeBook() {
+  public static Book makeBook() {
     return Book.builder().isbn("123").id(1L).title("One book").author("Me").build();
   }
 }

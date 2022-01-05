@@ -9,6 +9,8 @@ import lombok.*;
 @Builder
 public class LoanDTO {
 
+  private Long id;
   private String isbn;
   private String clientName;
+  private BookDTO book;
 }
